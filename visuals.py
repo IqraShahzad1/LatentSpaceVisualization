@@ -82,7 +82,7 @@ def getReconstructedImages(X, autoencoder):
     nbSquares = int(math.sqrt(nbSamples))
     nbSquaresHeight = 2*nbSquares
     nbSquaresWidth = nbSquaresHeight
-    resultImage = np.zeros((nbSquaresHeight*imageSize,nbSquaresWidth*imageSize/2,X.shape[-1]))
+    resultImage = np.zeros((int(nbSquaresHeight*imageSize), int(nbSquaresWidth*imageSize/2), X.shape[-1]))
 
     reconstructedX = autoencoder.predict(X)
 
@@ -91,7 +91,7 @@ def getReconstructedImages(X, autoencoder):
         reconstruction = reconstructedX[i]
         rowIndex = i%nbSquaresWidth
         columnIndex = (i-rowIndex)/nbSquaresHeight
-        resultImage[rowIndex*imageSize:(rowIndex+1)*imageSize,columnIndex*2*imageSize:(columnIndex+1)*2*imageSize,:] = np.hstack([original,reconstruction])
+        resultImage[int(rowIndex*imageSize):int((rowIndex+1)*imageSize),int(columnIndex*2*imageSize):int((columnIndex+1)*2*imageSize),:] = np.hstack([original,reconstruction])
 
     return resultImage
 
@@ -169,7 +169,8 @@ def visualizeInterpolation(start, end, encoder, decoder, save=False, nbSteps=5):
     resultImage = None
 
     if save:
-        hashName = ''.join(random.choice(string.lowercase) for i in range(3))
+        s = "abcdefghijklmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()?"
+        hashName = "".join(random.sample(s, 8))
 
     for i in range(len(reconstructions)):
         interpolatedImage = normalImages[i]*255
@@ -182,11 +183,13 @@ def visualizeInterpolation(start, end, encoder, decoder, save=False, nbSteps=5):
         reconstructedImage = cv2.resize(reconstructedImage,(50,50))
         reconstructedImage = reconstructedImage.astype(np.uint8)
         resultLatent = reconstructedImage if resultLatent is None else np.hstack([resultLatent,reconstructedImage])
-    
+
         if save:
-            cv2.imwrite(visualsPath+"{}_{}.png".format(hashName,i),np.hstack([interpolatedImage,reconstructedImage]))
+            val = cv2.imwrite(visualsPath+"{}_{}.png".format(hashName,i),np.hstack([interpolatedImage,reconstructedImage]))
+            print("Saving + {} ".format(str(val)))
 
         result = np.vstack([resultImage,resultLatent])
+    print("Stage 2")
 
     if not save:
         cv2.imshow("Interpolation in Image Space vs Latent Space",result)
